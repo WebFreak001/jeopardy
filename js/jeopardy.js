@@ -94,20 +94,25 @@ $(function(){
             $('#modal-answer-title').empty().text(currentBoard[category].name + ' - $' + value);
             $('#question').empty().text(currentBoard[category].questions[question].question);
             if (questionImage){
+                var video = questionImage.startsWith("video:");
+                if (video)
+                    questionImage = questionImage.substr(6);
                 if (questionImage.startsWith("http") || questionImage.startsWith("data")) {
                     srcPrefix = ''
                 }
                 else {
                     srcPrefix = './'
                 }
-                $('#question-image').empty().append("<img src=" + srcPrefix + questionImage + ">").show();
+                if (video)
+                    $('#question-image').empty().append("<video autoplay controls src=" + srcPrefix + questionImage + ">").show().focus();
+                else
+                    $('#question-image').empty().append("<img src=" + srcPrefix + questionImage + ">").show();
             }
             else {
                 $('#question-image').empty().hide();
             }
             $('#answer-text').text(answer).hide();
             $('#question-modal').modal('show');
-            //resizeAnswerModal();
             //$('#answer-close-button').hide().data('question', question).data('category', category);
             $('#answer-close-button').data('question', question).data('category', category);
             $('#answer-show-button').show();
@@ -139,7 +144,6 @@ $(function(){
                 }
                 $('#answer-text').text(answer).hide();
                 $('#question-modal').modal('show');
-                //resizeAnswerModal();
                 //$('#answer-close-button').hide().data('question', question).data('category', category);
                 $('#answer-close-button').data('question', question).data('category', category);
                 $('#answer-show-button').show();
@@ -150,10 +154,6 @@ $(function(){
 
             }
         });
-		//$('#question-modal').on('loaded.bs.modal', resizeAnswerModal());
-		$('#question-modal').on('shown.bs.modal', function (e) {
-		  resizeAnswerModal();
-		})
         handleAnswer();
     });
     $('#score-adjust').click(function(){
@@ -386,20 +386,6 @@ function loadBoard() {
     */
 }
 
-function resizeAnswerModal() {
-    var otherHeights = ($('#question-modal-content .modal-header, #question-modal-content .modal-footer').map(function(){return $(this).outerHeight();}));
-    var totalModalHeight = $('#question-modal-content').height();
-    for(var i=0; i < otherHeights.length; i++) { totalModalHeight -= otherHeights[i]; }
-    var modalBodyObj = $('#question-modal-content .modal-body');
-    var modalBodyPadding = modalBodyObj.innerHeight() - modalBodyObj.height();
-    //modalBodyObj.outerHeight(totalModalHeight);
-    modalBodyObj.css('height',(totalModalHeight - modalBodyPadding)); // Adjust again for padding
-
-    questionCenterPadding = ($('#question-modal-body').height() - ($('#question-image').height() + $('#question').height()))/2;
-    $('#question').css('padding-top', questionCenterPadding);
-
-}
-
 function handleAnswer(){
     $('.score-button').unbind("click").click(function(e){
         e.stopPropagation();
@@ -431,13 +417,13 @@ function handleAnswer(){
         updateScore();
     });
 
-    $('#answer-show-button').click(function(){
+    $('#answer-show-button').unbind("click").click(function(){
         $(this).hide();
         $('#answer-text').show();
-        resizeAnswerModal();
         //$('#answer-close-button').show();
     });
-    $('#answer-close-button').click(function(){
+    $('#answer-close-button').unbind("click").click(function(){
+        $('#question-image video').remove();
         var tile = $('div[data-category="' + $(this).data('category') + '"]>[data-question="' +
             $(this).data('question') + '"]')[0];
         $(tile).empty().append('&nbsp;<div class="clearfix"></div>').removeClass('unanswered').unbind().css('cursor','not-allowed');
@@ -485,7 +471,6 @@ function handleFinalAnswer(){
     $('#final-answer-show-button').click(function(){
         $(this).hide();
         $('#final-jeopardy-modal-answer').show();
-        //resizeAnswerModal();
         //$('#answer-close-button').show();
     });
 
